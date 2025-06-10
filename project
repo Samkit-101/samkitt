@@ -1,0 +1,18 @@
+pip install fastapi uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Question(BaseModel):
+    question: str
+
+@app.post("/api/")
+def answer_question(q: Question):
+    # For now, just return a dummy answer. Replace this with your logic!
+    return {
+        "answer": "This is a sample answer. Replace with your logic.",
+        "links": [
+            {"url": "https://example.com", "text": "Sample reference"}
+        ]
+    }
