@@ -1,0 +1,61 @@
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+from typing import List, Optional
+
+app = FastAPI()
+
+# Request schema
+class QARequest(BaseModel):
+    question: str
+    attachments: Optional[List[str]] = None  # Optionally support file attachments as base64
+
+# Response schema
+class Link(BaseModel):
+    url: str
+    text: str
+
+class QAResponse(BaseModel):
+    answer: str
+    links: List[Link]
+
+# Dummy data - replace this with actual scraping/processing logic
+DUMMY_ANSWERS = {
+    "Should I use gpt-4o-mini which AI model for this assignment?": {
+        "answer": "You must use `gpt-3.5-turbo-0125`, even if you have access to newer models.",
+        "links": [
+            {
+                "url": "https://discourse.onlinedegree.iitm.ac.in/t/which-model-to-use/12345",
+                "text": "Use the model that’s mentioned in the question."
+            },
+            {
+                "url": "https://discourse.onlinedegree.iitm.ac.in/t/assignment-guidelines/23456",
+                "text": "My understanding is that you just have to follow assignment instructions."
+            }
+        ]
+    }
+}
+
+@app.post("/api/", response_model=QAResponse)
+async def answer_question(payload: QARequest, request: Request):
+    # TODO: Replace with real retrieval + answer logic
+    q = payload.question.strip()
+    # Try to find a dummy answer; else return a generic reply
+    if q in DUMMY_ANSWERS:
+        data = DUMMY_ANSWERS[q]
+        return QAResponse(answer=data["answer"], links=[Link(**link) for link in data["links"]])
+    # Generic fallback
+    return QAResponse(
+        answer="Sorry, I don't know the answer to this question yet. Please refer to the course or Discourse forums.",
+        links=[
+            Link(
+                url="https://discourse.onlinedegree.iitm.ac.in/c/tds-jan-2025/",
+                text="TDS Discourse posts"
+            ),
+            Link(
+                url="https://onlinedegree.iitm.ac.in/course-content/tds-jan-2025/",
+                text="Course content"
+            )
+        ]
+    )
+
+# To run: uvicorn main:app --reload
